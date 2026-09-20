@@ -2,193 +2,166 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pénzügy Pro 2026</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Naptár</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2196F3">
     <style>
-        :root {
-            --bg: #0f0f0f; --card: #1a1a1a; --text: #ffffff;
-            --accent: #007aff; --success: #30d158; --gold: #ffcc00; --border: #2c2c2e; --red: #ff453a; --gray: #8e8e93;
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background: #f4f4f9;
+            color: #333;
         }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
-        .container { max-width: 480px; margin: 10px auto; background: var(--card); padding: 20px; border-radius: 28px; border: 1px solid var(--border); min-height: 85vh; display: flex; flex-direction: column; box-sizing: border-box; }
-        
-        /* Tablet optimalizáció (Tab S7 FE) */
-        @media (min-width: 768px) { .container { max-width: 700px; min-height: 70vh; } }
-
-        h1 { font-size: 26px; margin-bottom: 25px; text-align: center; font-weight: 800; letter-spacing: -0.5px; }
-        h2 { font-size: 20px; margin-bottom: 15px; color: var(--accent); text-align: center; }
-        
-        .main-btn { display: flex; align-items: center; justify-content: center; background: #262626; color: white; padding: 18px; margin: 12px 0; border: 1px solid var(--border); border-radius: 18px; font-size: 17px; cursor: pointer; width: 100%; font-weight: 600; transition: background 0.2s; }
-        .main-btn:active { background: #333; }
-        
-        .back-btn { background: #2c2c2e; color: var(--text); margin-top: auto; border: 1px solid #444; width: 100%; padding: 16px; border-radius: 16px; cursor: pointer; font-weight: 600; font-size: 16px; }
-        
-        .hidden { display: none !important; }
-        .rate-box { padding: 18px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 17px; }
-        
-        .full-input { width: 100%; padding: 14px; border: 1px solid var(--border); background: #242426; border-radius: 14px; font-size: 20px; color: white; text-align: right; box-sizing: border-box; outline: none; }
-        .full-input:focus { border-color: var(--accent); }
-
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: left; margin-top: 20px; font-size: 14px; }
-        .final-box { background: rgba(48, 209, 88, 0.1); border: 1px solid var(--success); padding: 18px; border-radius: 18px; margin-top: 20px; text-align: center; }
-        .green-val { color: var(--success); font-size: 22px; font-weight: 700; display: block; margin-top: 5px; }
-        hr { border: 0; border-top: 1px solid #333; margin: 10px 0; }
-        label { display: block; margin-bottom: 6px; margin-left: 4px; font-weight: 600; }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #2196F3;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .header button {
+            background: white;
+            color: #2196F3;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-weight: bold;
+            background: #ddd;
+            padding: 5px 0;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+        .days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+        .day-cell {
+            background: white;
+            min-height: 70px;
+            padding: 5px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+        .day-cell.empty {
+            background: transparent;
+            box-shadow: none;
+        }
+        .day-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .checkbox-container {
+            text-align: center;
+            margin-top: 5px;
+        }
+        .checkbox-container input {
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
-<div class="container" id="main-menu">
-    <div style="font-size: 40px; text-align: center; margin-bottom: 10px;">📈</div>
-    <h1>Pénzügy 2026</h1>
-    <button class="main-btn" onclick="navigateTo('arany-screen', loadGold)">🟡 Arany Árfolyam</button>
-    <button class="main-btn" onclick="navigateTo('arfolyam-screen', loadRates)">🏦 Valuta Árfolyamok</button>
-    <button class="main-btn" onclick="navigateTo('ber-screen')">💳 Bérkalkulátor</button>
-    <div style="text-align: center; color: var(--gray); font-size: 12px; margin-top: 20px;">V1.2 | Note 20 & Tab S7 optimalizált</div>
-</div>
-
-<div class="container hidden" id="arany-screen">
-    <h2>🟡 Arany Árfolyam</h2>
-    <div id="gold-result"></div>
-    <button class="back-btn" onclick="goBack()">Vissza</button>
-</div>
-
-<div class="container hidden" id="arfolyam-screen">
-    <h2>🏦 Élő Valuták (HUF)</h2>
-    <div id="rates-result"></div>
-    <button class="back-btn" onclick="goBack()">Vissza</button>
-</div>
-
-<div class="container hidden" id="ber-screen">
-    <h2>💳 2026-os Bérkalkulátor</h2>
-    <div style="margin-bottom:15px;"><label style="font-size:11px;color:var(--gray)">BRUTTÓ BÉR</label><input type="text" id="brutto-input" class="full-input" oninput="handleSmartInput(this, 'brutto')" inputmode="numeric" placeholder="0 Ft"></div>
-    <div style="margin-bottom:15px;"><label style="font-size:11px;color:var(--gray)">NETTÓ BÉR</label><input type="text" id="netto-input" class="full-input" oninput="handleSmartInput(this, 'netto')" inputmode="numeric" placeholder="0 Ft"></div>
-    <div style="margin-bottom:15px;"><label style="font-size:11px;color:var(--gray)">ELTARTOTT GYEREKEK (2x kedvezmény)</label><input type="number" id="gyerekek" class="full-input" value="0" min="0" oninput="recalculate()"></div>
-    
-    <div id="results" class="hidden">
-        <div class="grid">
-            <div><b style="color:var(--red)">Munkavállaló</b><div id="res-list-left" style="margin-top:8px;"></div></div>
-            <div><b style="color:var(--accent)">Munkáltató</b><div id="res-list-right" style="margin-top:8px;"></div></div>
-        </div>
-        <div class="final-box">Összes állami bevétel (adó):<span class="green-val" id="res-osszes-teher">0 Ft</span></div>
+    <div class="header">
+        <button onclick="changeMonth(-1)">&lt; Hónap</button>
+        <h2 id="month-year" style="margin: 0; font-size: 18px;"></h2>
+        <button onclick="changeMonth(1)">Hónap &gt;</button>
     </div>
-    <button class="back-btn" onclick="goBack()">Vissza</button>
-</div>
 
-<script>
-    function format(num) { return Math.round(num).toLocaleString('hu-HU'); }
+    <div class="weekdays">
+        <div>H</div><div>K</div><div>Sze</div><div>Cs</div><div>P</div><div>Szo</div><div>V</div>
+    </div>
 
-    function navigateTo(id, callback) { 
-        history.pushState({screen: id}, ""); 
-        showScreen(id, callback); 
-    }
-    
-    function goBack() { 
-        if (history.state && history.state.screen !== 'main-menu') {
-            history.back();
-        } else {
-            showScreen('main-menu');
-        }
-    }
+    <div class="days" id="calendar-days"></div>
 
-    window.onpopstate = function(e) { showScreen(e.state ? e.state.screen : 'main-menu'); };
+    <script>
+        let today = new Date();
+        let currentMonth = today.getMonth();
+        let currentYear = today.getFullYear();
 
-    function showScreen(id, callback) { 
-        document.querySelectorAll('.container').forEach(c => c.classList.add('hidden')); 
-        const target = document.getElementById(id || 'main-menu');
-        if(target) target.classList.remove('hidden');
-        if(callback) callback();
-    }
+        const monthsHu = [
+            "Január", "Február", "Március", "Április", "Május", "Június",
+            "Július", "Augusztus", "Szeptember", "Október", "November", "December"
+        ];
 
-    function handleSmartInput(el, type) {
-        let val = el.value.replace(/\D/g, "");
-        if (!val) { 
-            el.value = ""; 
-            document.getElementById('results').classList.add('hidden');
-            return; 
-        }
-        el.value = parseInt(val).toLocaleString('hu-HU');
-        calculate(parseInt(val), type);
-    }
-
-    function calculate(num, type) {
-        // 2026-os becsült adatok
-        const szjaP = 0.15, tbP = 0.185, szochoP = 0.125; 
-        const mber_2026 = 350000; // Becsült minimálbér
-        const minJalap = mber_2026 * 0.3; // Járulékfizetési alsó határ
-        
-        let gy = parseInt(document.getElementById('gyerekek').value) || 0;
-        // Duplázott családi kedvezmény 2026 (1: 20e, 2: 80e, 3+: 66e/fő)
-        let kedv = (gy === 1 ? 20000 : (gy === 2 ? 80000 : (gy >= 3 ? gy * 66000 : 0)));
-        
-        let br, nt;
-        if (type === 'brutto') {
-            br = num;
-            let szja = Math.max(0, (br * szjaP) - kedv);
-            let tb = br * tbP;
-            nt = br - szja - tb;
-        } else {
-            nt = num;
-            // Nettóból bruttó közelítés kedvezménnyel
-            br = (nt - kedv) / (1 - szjaP - tbP);
-            if (br < nt || isNaN(br)) br = nt / (1 - tbP);
-            let tSzja = Math.max(0, (br * szjaP) - kedv);
-            if(tSzja === 0) br = nt / (1 - tbP);
-        }
-
-        if(type === 'brutto') document.getElementById('netto-input').value = format(nt);
-        else document.getElementById('brutto-input').value = format(br);
-
-        if (br > 0) {
-            document.getElementById('results').classList.remove('hidden');
-            let s = Math.max(0, (br * szjaP) - kedv), t = br * tbP, sz = br * szochoP;
-            let tk = br < minJalap ? (minJalap - br) * 0.185 : 0; // TB kiegészítés ha részmunkaidő
+        function renderCalendar() {
+            const monthYearEl = document.getElementById("month-year");
+            const daysContainer = document.getElementById("calendar-days");
             
-            document.getElementById('res-list-left').innerHTML = `SZJA: ${format(s)} Ft<br>TB: ${format(t)} Ft<hr><b>Levonás: ${format(s+t)} Ft</b>`;
-            document.getElementById('res-list-right').innerHTML = `Szocho: ${format(sz)} Ft<br>` + (tk > 0 ? `<span style="color:var(--red)">Min.TB: ${format(tk)} Ft</span>` : `Min.TB: 0 Ft`);
-            document.getElementById('res-osszes-teher').innerHTML = `${format(br + sz + tk - nt)} Ft<br><small style="color:var(--gray); font-size:12px;">Teljes bérköltség: ${format(br + sz + tk)} Ft</small>`;
-        }
-    }
+            monthYearEl.innerText = `${currentYear} ${monthsHu[currentMonth]}`;
+            daysContainer.innerHTML = "";
 
-    function recalculate() { 
-        let v = document.getElementById('brutto-input').value.replace(/\D/g, ""); 
-        if(v) calculate(parseInt(v), 'brutto'); 
-    }
+            // Hónap első napja (0: Vasárnap, 1: Hétfő, stb. - átalakítva, hogy Hétfő legyen az első)
+            let firstDayIndex = (new Date(currentYear, currentMonth, 1).getDay() + 6) % 7;
+            let totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-    async function loadGold() {
-        const d = document.getElementById('gold-result');
-        d.innerHTML = "<p style='text-align:center; padding:20px;'>⏳ Élő arany árfolyam lekérése...</p>";
-        try {
-            const hRes = await fetch('https://open.er-api.com/v6/latest/USD?t=' + Date.now());
-            const hData = await hRes.json();
-            const usdHuf = hData.rates.HUF;
-            const gRes = await fetch('https://api.gold-api.com/price/XAU');
-            const gData = await gRes.json();
-            const goldUsd = gData.price;
-            const c = Math.round((goldUsd * usdHuf) / 31.1035);
-            d.innerHTML = `
-                <div class="rate-box"><span>🏆 24k Arany (999)</span><b style="color:var(--gold)">${format(c)} Ft/g</b></div>
-                <div class="rate-box"><span>🥇 18k Arany (750)</span><b>${format(c*0.75)} Ft/g</b></div>
-                <div class="rate-box"><span>💍 14k Arany (585)</span><b>${format(c*0.585)} Ft/g</b></div>
-                <div style="font-size:11px; color:var(--gray); text-align:center; margin-top:15px;">Világpiaci ár + USD/HUF: ${format(usdHuf)} Ft</div>`;
-        } catch (e) { d.innerHTML = "<p style='color:var(--red); text-align:center; padding:20px;'>❌ Hiba az adatok lekérésekor.</p>"; }
-    }
-
-    async function loadRates() {
-        const d = document.getElementById('rates-result');
-        d.innerHTML = "<p style='text-align:center; padding:20px;'>⏳ Valuták frissítése...</p>";
-        try {
-            const r = await fetch('https://open.er-api.com/v6/latest/HUF?t=' + Date.now());
-            const j = await r.json();
-            if (j.result === "success") {
-                const s = (curr, icon) => {
-                    const rate = (1 / j.rates[curr]).toFixed(2);
-                    return `<div class="rate-box"><span>${icon} ${curr}</span><b style="color:var(--accent)">${rate} Ft</b></div>`;
-                };
-                d.innerHTML = s('EUR', '🇪🇺') + s('USD', '🇺🇸') + s('GBP', '🇬🇧') + s('CHF', '🇨🇭');
+            // Üres cellák a hónap kezdete előtt
+            for (let i = 0; i < firstDayIndex; i++) {
+                let emptyCell = document.createElement("div");
+                emptyCell.classList.add("day-cell", "empty");
+                daysContainer.appendChild(emptyCell);
             }
-        } catch (e) { d.innerHTML = "<p style='color:var(--red); text-align:center; padding:20px;'>❌ Hálózat hiba.</p>"; }
-    }
-</script>
+
+            // Napok generálása
+            for (let day = 1; day <= totalDays; day++) {
+                let cell = document.createElement("div");
+                cell.classList.add("day-cell");
+
+                let storageKey = `calendar_${currentYear}_${currentMonth}_${day}`;
+                let isChecked = localStorage.getItem(storageKey) === "true";
+
+                cell.innerHTML = `
+                    <div class="day-content">
+                        <span><strong>${day}</strong></span>
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" ${isChecked ? "checked" : ""} onclick="saveState(${currentYear}, ${currentMonth}, ${day}, this.checked)">
+                    </div>
+                `;
+                daysContainer.appendChild(cell);
+            }
+        }
+
+        function changeMonth(direction) {
+            currentMonth += direction;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            } else if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar();
+        }
+
+        function saveState(year, month, day, status) {
+            let storageKey = `calendar_${year}_${month}_${day}`;
+            localStorage.setItem(storageKey, status);
+        }
+
+        // Service Worker regisztráció
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+
+        renderCalendar();
+    </script>
 </body>
 </html>
