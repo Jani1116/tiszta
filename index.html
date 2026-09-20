@@ -2,166 +2,179 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Naptár</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Naptár PRO</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2196F3">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 10px;
-            background: #f4f4f9;
-            color: #333;
+        :root {
+            --bg: #000000; --card: #1c1c1e; --text: #ffffff;
+            --accent: #007aff; --border: #2c2c2e; --secondary: #8e8e93;
+            --success: #30d158;
         }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #2196F3;
-            color: white;
-            padding: 10px 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-        }
-        .header button {
-            background: white;
-            color: #2196F3;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .weekdays {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            text-align: center;
-            font-weight: bold;
-            background: #ddd;
-            padding: 5px 0;
-            border-radius: 4px;
-            margin-bottom: 5px;
-        }
-        .days {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 5px;
-        }
-        .day-cell {
-            background: white;
-            min-height: 70px;
-            padding: 5px;
-            border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            font-size: 14px;
-        }
-        .day-cell.empty {
-            background: transparent;
-            box-shadow: none;
-        }
-        .day-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .checkbox-container {
-            text-align: center;
-            margin-top: 5px;
-        }
-        .checkbox-container input {
-            cursor: pointer;
-        }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); user-select: none; }
+        .container { max-width: 600px; margin: auto; background: #121212; padding: 15px; border-radius: 28px; border: 1px solid var(--border); box-shadow: 0 20px 40px rgba(0,0,0,0.8); box-sizing: border-box; min-height: 95vh; display: flex; flex-direction: column; }
+        
+        .nav-group { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 8px 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .nav-btn { background: none; border: none; color: var(--accent); font-size: 18px; cursor: pointer; padding: 0 8px; }
+        .nav-title { font-weight: bold; font-size: 15px; }
+
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: var(--card); padding: 10px 15px; border-radius: 14px; border: 1px solid var(--border); }
+        
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; flex-grow: 1; }
+        .weekday-header { text-align: center; font-size: 12px; color: var(--secondary); padding: 5px 0; font-weight: bold; }
+        
+        .day-cell { background: var(--card); border: 1px solid var(--border); border-radius: 10px; min-height: 70px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 6px 2px; box-sizing: border-box; }
+        .day-cell.empty { background: transparent; border: none; }
+        .day-num { font-size: 14px; font-weight: bold; color: var(--text); }
+        .day-cell input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--success); }
+
+        .alarm-box { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 10px 15px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+        .alarm-box input { background: #2c2c2e; border: 1px solid var(--border); color: white; padding: 5px; border-radius: 8px; color-scheme: dark; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <button onclick="changeMonth(-1)">&lt; Hónap</button>
-        <h2 id="month-year" style="margin: 0; font-size: 18px;"></h2>
-        <button onclick="changeMonth(1)">Hónap &gt;</button>
+<div class="container">
+    <h2 style="margin: 5px 0 15px 0; font-size: 20px; text-align:center;">Havi Naptár</h2>
+    
+    <!-- Év Lapozó -->
+    <div class="nav-group">
+        <button class="nav-btn" onclick="changeYear(-1)">❮</button>
+        <span id="year-display" class="nav-title">2026</span>
+        <button class="nav-btn" onclick="changeYear(1)">❯</button>
+    </div>
+    
+    <!-- Hónap Lapozó -->
+    <div class="nav-group">
+        <button class="nav-btn" onclick="changeMonth(-1)">❮</button>
+        <span id="month-display" class="nav-title">Július</span>
+        <button class="nav-btn" onclick="changeMonth(1)">❯</button>
     </div>
 
-    <div class="weekdays">
-        <div>H</div><div>K</div><div>Sze</div><div>Cs</div><div>P</div><div>Szo</div><div>V</div>
+    <!-- Ébresztő / Emlékeztető Beállítás -->
+    <div class="alarm-box">
+        <span>⏰ Napi emlékeztető:</span>
+        <div>
+            <input type="time" id="alarm-time" onchange="saveAlarm()">
+            <button onclick="requestNotificationPermission()" style="background:var(--accent); border:none; color:white; padding:5px 10px; border-radius:8px; cursor:pointer; font-size:12px;">Engedély</button>
+        </div>
     </div>
 
-    <div class="days" id="calendar-days"></div>
+    <!-- Heti fejek -->
+    <div style="display: grid; grid-template-columns: repeat(7, 1fr); margin-top: 10px;">
+        <div class="weekday-header">H</div>
+        <div class="weekday-header">K</div>
+        <div class="weekday-header">Sze</div>
+        <div class="weekday-header">Cs</div>
+        <div class="weekday-header">P</div>
+        <div class="weekday-header">Szo</div>
+        <div class="weekday-header">V</div>
+    </div>
 
-    <script>
-        let today = new Date();
-        let currentMonth = today.getMonth();
-        let currentYear = today.getFullYear();
+    <!-- Havi Táblázat Grid -->
+    <div class="calendar-grid" id="calendar-grid" style="margin-top: 5px;"></div>
+</div>
 
-        const monthsHu = [
-            "Január", "Február", "Március", "Április", "Május", "Június",
-            "Július", "Augusztus", "Szeptember", "Október", "November", "December"
-        ];
+<script>
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js'); }
 
-        function renderCalendar() {
-            const monthYearEl = document.getElementById("month-year");
-            const daysContainer = document.getElementById("calendar-days");
+    const months = ["Január", "Február", "Március", "Április", "Május", "Június", "Július", "Augusztus", "Szeptember", "Október", "November", "December"];
+    let currentDate = new Date();
+
+    function init() {
+        loadAlarmUI();
+        render();
+        setInterval(checkAlarm, 1000);
+    }
+
+    function render() {
+        let year = currentDate.getFullYear();
+        let month = currentDate.getMonth();
+
+        document.getElementById('year-display').innerText = year;
+        document.getElementById('month-display').innerText = months[month];
+
+        let grid = document.getElementById('calendar-grid');
+        grid.innerHTML = "";
+
+        let firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7;
+        let totalDays = new Date(year, month + 1, 0).getDate();
+
+        // Üres cellák a hónap kezdete előtt
+        for (let i = 0; i < firstDayIndex; i++) {
+            let emptyCell = document.createElement('div');
+            emptyCell.className = 'day-cell empty';
+            grid.appendChild(emptyCell);
+        }
+
+        // Napok cellái
+        for (let day = 1; day <= totalDays; day++) {
+            let cell = document.createElement('div');
+            cell.className = 'day-cell';
             
-            monthYearEl.innerText = `${currentYear} ${monthsHu[currentMonth]}`;
-            daysContainer.innerHTML = "";
+            let storageKey = `cal_${year}_${month}_${day}`;
+            let isChecked = localStorage.getItem(storageKey) === 'true';
 
-            // Hónap első napja (0: Vasárnap, 1: Hétfő, stb. - átalakítva, hogy Hétfő legyen az első)
-            let firstDayIndex = (new Date(currentYear, currentMonth, 1).getDay() + 6) % 7;
-            let totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+            cell.innerHTML = `
+                <span class="day-num">${day}</span>
+                <input type="checkbox" ${isChecked ? 'checked' : ''} onclick="saveCheck(${year}, ${month}, ${day}, this.checked)">
+            `;
+            grid.appendChild(cell);
+        }
+    }
 
-            // Üres cellák a hónap kezdete előtt
-            for (let i = 0; i < firstDayIndex; i++) {
-                let emptyCell = document.createElement("div");
-                emptyCell.classList.add("day-cell", "empty");
-                daysContainer.appendChild(emptyCell);
+    function changeYear(n) {
+        currentDate.setFullYear(currentDate.getFullYear() + n);
+        render();
+    }
+
+    function changeMonth(n) {
+        currentDate.setMonth(currentDate.getMonth() + n);
+        render();
+    }
+
+    function saveCheck(year, month, day, status) {
+        localStorage.setItem(`cal_${year}_${month}_${day}`, status);
+    }
+
+    // Ébresztő / Időzítő logika
+    function requestNotificationPermission() {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') alert('Értesítések engedélyezve!');
+        });
+    }
+
+    function saveAlarm() {
+        let time = document.getElementById('alarm-time').value;
+        localStorage.setItem('app_alarm', time);
+    }
+
+    function loadAlarmUI() {
+        let savedTime = localStorage.getItem('app_alarm');
+        if (savedTime) {
+            document.getElementById('alarm-time').value = savedTime;
+        }
+    }
+
+    function checkAlarm() {
+        let savedTime = localStorage.getItem('app_alarm');
+        if (!savedTime) return;
+
+        let now = new Date();
+        let currentHours = String(now.getHours()).padStart(2, '0');
+        let currentMinutes = String(now.getMinutes()).padStart(2, '0');
+        let currentTimeStr = `${currentHours}:${currentMinutes}`;
+
+        if (currentTimeStr === savedTime && now.getSeconds() === 0) {
+            if (Notification.permission === 'granted') {
+                new Notification('Naptár Emlékeztető', { body: 'Itt az ideje ellenőrizni a naptárat!' });
+            } else {
+                alert('Emlékeztető: Itt az ideje ellenőrizni a naptárat!');
             }
-
-            // Napok generálása
-            for (let day = 1; day <= totalDays; day++) {
-                let cell = document.createElement("div");
-                cell.classList.add("day-cell");
-
-                let storageKey = `calendar_${currentYear}_${currentMonth}_${day}`;
-                let isChecked = localStorage.getItem(storageKey) === "true";
-
-                cell.innerHTML = `
-                    <div class="day-content">
-                        <span><strong>${day}</strong></span>
-                    </div>
-                    <div class="checkbox-container">
-                        <input type="checkbox" ${isChecked ? "checked" : ""} onclick="saveState(${currentYear}, ${currentMonth}, ${day}, this.checked)">
-                    </div>
-                `;
-                daysContainer.appendChild(cell);
-            }
         }
+    }
 
-        function changeMonth(direction) {
-            currentMonth += direction;
-            if (currentMonth > 11) {
-                currentMonth = 0;
-                currentYear++;
-            } else if (currentMonth < 0) {
-                currentMonth = 11;
-                currentYear--;
-            }
-            renderCalendar();
-        }
-
-        function saveState(year, month, day, status) {
-            let storageKey = `calendar_${year}_${month}_${day}`;
-            localStorage.setItem(storageKey, status);
-        }
-
-        // Service Worker regisztráció
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
-
-        renderCalendar();
-    </script>
+    init();
+</script>
 </body>
 </html>
