@@ -1,4 +1,4 @@
-const CACHE_NAME = 'naptar-v2';
+const CACHE_NAME = 'naptar-v3';
 const assets = [
   './',
   './index.html',
