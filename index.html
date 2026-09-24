@@ -41,9 +41,13 @@
         .mini-day { font-size: 8px; text-align: center; padding: 2px 0; border-radius: 2px; color: var(--secondary); background: #252528; }
         .mini-day.checked { background: var(--success); color: #000; font-weight: bold; }
         .mini-day.empty { background: transparent; }
+
+        #loading-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 3000; display: none; align-items: center; justify-content: center; color: white; font-weight: bold; }
     </style>
 </head>
 <body>
+
+<div id="loading-overlay">Szinkronizálás...</div>
 
 <div class="container">
     <h2 style="margin: 5px 0 12px 0; font-size: 20px; text-align:center;">Havi Naptár</h2>
@@ -57,7 +61,7 @@
         <button class="nav-btn" onclick="changeYear(1)">❯</button>
     </div>
     
-    <!-- Hónap Lapozó (Csak havi nézetben látszik) -->
+    <!-- Hónap Lapozó -->
     <div class="nav-group" id="month-nav-group">
         <button class="nav-btn" onclick="changeMonth(-1)">❮</button>
         <span id="month-display" class="nav-title">Július</span>
@@ -75,7 +79,7 @@
         <div class="weekday-header">V</div>
     </div>
 
-    <!-- Fő Grid (Havi vagy Éves) -->
+    <!-- Fő Grid -->
     <div class="calendar-grid" id="calendar-grid" style="margin-top: 5px;"></div>
 
     <!-- Statisztikai sorok -->
@@ -93,13 +97,33 @@
 
 <script>
     if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js'); }
-
+    
+    const DB_URL = "https://kiadaskoveto-2e474-default-rtdb.firebaseio.com/naptar_data.json";
     const months = ["Január", "Február", "Március", "Április", "Május", "Június", "Július", "Augusztus", "Szeptember", "Október", "November", "December"];
+    
     let currentDate = new Date();
     let isYearView = false;
+    let calendarData = {};
 
-    function init() {
+    async function init() {
+        await loadRemoteData();
         render();
+    }
+
+    async function loadRemoteData() {
+        showLoading(true);
+        try {
+            const res = await fetch(DB_URL);
+            const data = await res.json();
+            if(data) calendarData = data;
+        } catch(e) { console.log("Offline mód"); }
+        showLoading(false);
+    }
+
+    async function syncData() {
+        try {
+            await fetch(DB_URL, { method: 'PUT', body: JSON.stringify(calendarData) });
+        } catch(e) { console.log("Hálózati hiba mentéskor"); }
     }
 
     function toggleView() {
@@ -146,7 +170,7 @@
         for (let day = 1; day <= totalDays; day++) {
             let cell = document.createElement('div');
             cell.className = 'day-cell';
-            let isChecked = localStorage.getItem(`cal_${year}_${month}_${day}`) === 'true';
+            let isChecked = calendarData[`cal_${year}_${month}_${day}`] === true;
 
             cell.innerHTML = `
                 <span class="day-num">${day}</span>
@@ -168,7 +192,6 @@
         let miniGrid = document.createElement('div');
         miniGrid.className = 'mini-grid';
 
-        // Hétfőtől induló kisfejek (opcionális betűk)
         ["H","K","S","C","P","Sz","V"].forEach(d => {
             let h = document.createElement('div');
             h.className = 'mini-day';
@@ -190,7 +213,7 @@
             let dCell = document.createElement('div');
             dCell.className = 'mini-day';
             dCell.innerText = day;
-            if (localStorage.getItem(`cal_${year}_${month}_${day}`) === 'true') {
+            if (calendarData[`cal_${year}_${month}_${day}`] === true) {
                 dCell.classList.add('checked');
             }
             miniGrid.appendChild(dCell);
@@ -210,20 +233,23 @@
         render();
     }
 
-    function saveCheck(year, month, day, status) {
-        localStorage.setItem(`cal_${year}_${month}_${day}`, status);
+    async function saveCheck(year, month, day, status) {
+        let key = `cal_${year}_${month}_${day}`;
+        if(status) {
+            calendarData[key] = true;
+        } else {
+            delete calendarData[key];
+        }
         updateStats();
+        await syncData();
     }
 
     function updateStats() {
-        let startDate = new Date(2026, 8, 20); // 2026 Szeptember 20 (hónap 0-alapú: 8 = szept)
+        let startDate = new Date(2026, 8, 20); // 2026 Szeptember 20
         let today = new Date();
         today.setHours(0,0,0,0);
 
         let totalChecked = 0;
-        let currentStreak = 0;
-        let tempStreak = 0;
-
         let loopDate = new Date(startDate);
 
         while (loopDate <= today) {
@@ -231,24 +257,14 @@
             let m = loopDate.getMonth();
             let d = loopDate.getDate();
 
-            let isChecked = localStorage.getItem(`cal_${y}_${m}_${d}`) === 'true';
-
-            if (isChecked) {
+            if (calendarData[`cal_${y}_${m}_${d}`] === true) {
                 totalChecked++;
-                tempStreak++;
-            } else {
-                tempStreak = 0;
             }
-
-            // A legutolsó egybefüggő sorozat számításához a ma napig nézzük
             loopDate.setDate(loopDate.getDate() + 1);
         }
 
-        // Ha a mai nap nincs kipipálva, de tegnapig volt, akkor az utolsó egybefüggő a tegnapi sorozat vége
-        // Egyszerűbb iteráció a mai naptól visszafelé a sorozatért:
         let streakCheckDate = new Date(today);
         let activeStreak = 0;
-        // Először megnézzük a mait, ha nincs, nézzük a tegnapot, stb. amíg találunk láncot
         while(true) {
             let y = streakCheckDate.getFullYear();
             let m = streakCheckDate.getMonth();
@@ -256,18 +272,16 @@
             
             if (streakCheckDate < startDate) break;
 
-            if (localStorage.getItem(`cal_${y}_${m}_${d}`) === 'true') {
+            if (calendarData[`cal_${y}_${m}_${d}`] === true) {
                 activeStreak++;
                 streakCheckDate.setDate(streakCheckDate.getDate() - 1);
             } else {
-                // Ha a mai nap nincs kipipálva, de tegnap volt, akkor a tegnapi láncot kell néznünk
                 if (activeStreak === 0 && streakCheckDate.getTime() === today.getTime()) {
                     streakCheckDate.setDate(streakCheckDate.getDate() - 1);
                     let y2 = streakCheckDate.getFullYear();
                     let m2 = streakCheckDate.getMonth();
                     let d2 = streakCheckDate.getDate();
-                    if (localStorage.getItem(`cal_${y2}_${m2}_${d2}`) === 'true') {
-                        // Újraindítjuk a visszafelé számítást onnan
+                    if (calendarData[`cal_${y2}_${m2}_${d2}`] === true) {
                         continue;
                     }
                 }
@@ -277,6 +291,10 @@
 
         document.getElementById('stat-total').innerText = totalChecked;
         document.getElementById('stat-streak').innerText = activeStreak;
+    }
+
+    function showLoading(s) {
+        document.getElementById('loading-overlay').style.display = s ? 'flex' : 'none';
     }
 
     init();
